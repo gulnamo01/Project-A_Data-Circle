@@ -2,13 +2,13 @@ print('Hello World')
 import pandas as pd
 
 #open the datasets
-submission = pd.read_csv("C:\\Users\\Gulnamo\\Desktop\\Redi School\\Data Circle\\Project-A_Data-Circle\\submission_format.csv")
+submission = pd.read_csv("data/submission_format.csv")
 print(submission)
-test_features = pd.read_csv("C:\\Users\\Gulnamo\\Desktop\\Redi School\\Data Circle\\Project-A_Data-Circle\\test_set_features.csv")
+test_features = pd.read_csv("data/test_set_features.csv")
 print(test_features)
-train_features = pd.read_csv("C:\\Users\\Gulnamo\\Desktop\\Redi School\\Data Circle\\Project-A_Data-Circle\\training_set_features.csv")
+train_features = pd.read_csv("data/training_set_features.csv")
 print(train_features)
-train_labels = pd.read_csv("C:\\Users\\Gulnamo\\Desktop\\Redi School\\Data Circle\\Project-A_Data-Circle\\training_set_labels.csv")
+train_labels = pd.read_csv("data/training_set_labels.csv")
 print (train_labels)
 
 #merge the X and Y training datasets 
