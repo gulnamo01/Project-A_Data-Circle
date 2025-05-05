@@ -47,6 +47,16 @@ categorical_cols = [
 doctor_rec_cols = ['doctor_recc_h1n1', 'doctor_recc_seasonal']
 employment_info_cols = ['employment_industry', 'employment_occupation']
 
+ordinal_enc_cols = ['age_group', 'education', 'income_poverty']
+binary_enc_cols = ['sex', 'marital_status', 'rent_or_own']
+nominal_enc_cols = ['race', 'hhs_geo_region', 'census_msa', 'employment_industry', 'employment_occupation', 'employment_status']
+
+# Define custom orderings for ordinal columns
+age_order = ['18 - 34 Years', '35 - 44 Years', '45 - 54 Years', '55 - 64 Years', '65+ Years']
+edu_order = ['< 12 Years', '12 Years', 'Some College', 'College Graduate']
+income_order = ['Below Poverty', '<= $75,000, Above Poverty', '> $75,000']
+enc_order = [age_order, edu_order,income_order]
+
 
 # Build pipeline
 pipeline = build_full_pipeline(
@@ -55,7 +65,12 @@ pipeline = build_full_pipeline(
     numerical_cols=numerical_cols,
     categorical_cols=categorical_cols,
     doctor_rec_cols = doctor_rec_cols,
-    employment_info_cols= employment_info_cols
+    employment_info_cols= employment_info_cols,
+    ordinal_enc_cols= ordinal_enc_cols,
+    binary_enc_cols= binary_enc_cols,
+    nominal_enc_cols= nominal_enc_cols,
+    enc_order= enc_order
+    
 )
 
 # Fit pipeline
@@ -69,7 +84,7 @@ pipeline.fit(X_train, y_train)
 pipeline.fit(X_test, y_test)
 # Save validation pipeline
 save_pipeline(pipeline, 'full_test_pipeline.pkl')
-print("done the imputation pipeline")
+print("done the imputation + encoding pipeline")
 
 # Predict on new data
 # pipeline = load_pipeline('full_train_pipeline.pkl')
