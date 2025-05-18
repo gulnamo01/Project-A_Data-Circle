@@ -1,16 +1,7 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import LabelEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from scipy import stats
-import numpy as np
-from scipy.stats import chi2_contingency
-from sklearn.impute import SimpleImputer
-import joblib
 from sklearn.model_selection import train_test_split
 from ml_pipeline import build_full_pipeline, save_pipeline, load_pipeline
+
 
 
 #open the datasets
@@ -78,12 +69,12 @@ pipeline.fit(X_train, y_train)
 
 # Save pipeline
 save_pipeline(pipeline, 'full_train_pipeline.pkl')
-pipeline.fit(X_train, y_train)
+# pipeline.fit(X_train, y_train)
 
-# Fit validation pipeline
-pipeline.fit(X_test, y_test)
-# Save validation pipeline
-save_pipeline(pipeline, 'full_test_pipeline.pkl')
+# # Fit validation pipeline
+# pipeline.fit(X_test, y_test)
+# # Save validation pipeline
+# save_pipeline(pipeline, 'full_test_pipeline.pkl')
 print("done the imputation + encoding pipeline")
 
 # Predict on new data
