@@ -3,9 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score
 from ml_pipeline import build_full_pipeline
+from sklearn.metrics import accuracy_score
 import warnings
 
 # Optional: XGBoost and LightGBM
@@ -17,8 +16,6 @@ try:
     from lightgbm import LGBMClassifier
 except ImportError:
     LGBMClassifier = None
-
-from scipy.stats import mode
 
 warnings.filterwarnings("ignore")
 
@@ -94,7 +91,6 @@ for target in ['h1n1_vaccine', 'seasonal_vaccine']:
         train_features, train_labels[target], test_size=0.2, random_state=42,
         stratify=train_labels[target]
     )
-    # Fit and evaluate supervised models
     for model_name, model in model_defs.items():
         pipeline = Pipeline([
             ('preprocessor', preprocessor),
@@ -109,33 +105,6 @@ for target in ['h1n1_vaccine', 'seasonal_vaccine']:
             "Validation Accuracy": acc
         })
         print(f"{model_name} ({target}): Validation accuracy: {acc:.4f}")
-    
-    # --- KMeans as a baseline ---
-    # Preprocess the data
-    X_train_proc = preprocessor.fit_transform(X_train)
-    X_test_proc = preprocessor.transform(X_test)
-    # Set number of clusters to number of classes (2 for binary)
-    n_clusters = len(pd.unique(y_train_target))
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    kmeans.fit(X_train_proc)
-    # Assign each cluster to the most common class in the training set
-    cluster_to_class = {}
-    for cluster in range(n_clusters):
-        labels_in_cluster = y_train_target[kmeans.labels_ == cluster]
-        if len(labels_in_cluster) == 0:
-            cluster_to_class[cluster] = mode(y_train_target, keepdims=True).mode[0]
-        else:
-            cluster_to_class[cluster] = mode(labels_in_cluster, keepdims=True).mode[0]
-    # Predict clusters for test data, then map to class
-    test_clusters = kmeans.predict(X_test_proc)
-    y_pred_kmeans = [cluster_to_class[c] for c in test_clusters]
-    acc_kmeans = accuracy_score(y_test_target, y_pred_kmeans)
-    results.append({
-        "Target": target,
-        "Model": "KMeans (cluster baseline)",
-        "Validation Accuracy": acc_kmeans
-    })
-    print(f"KMeans (cluster baseline) ({target}): Validation accuracy: {acc_kmeans:.4f}")
 
 # Present results as a summary table
 results_df = pd.DataFrame(results)
