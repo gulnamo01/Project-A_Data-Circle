@@ -3,6 +3,8 @@ from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.multioutput import MultiOutputClassifier
 import pandas as pd
 import joblib
 
@@ -69,12 +71,14 @@ def build_full_pipeline(
     ])
     doctor_pipe = Pipeline([
         ('imputer', SimpleImputer(strategy='constant', fill_value=9999))
+
     ])
     num_pipe = Pipeline([
         ('imputer', SimpleImputer(strategy='mean'))
     ])
     emp_pipe = Pipeline([
-        ('imputer', SimpleImputer(strategy='constant', fill_value='Not Applicable'))
+        ('imputer', SimpleImputer(strategy='constant', fill_value='Not Applicable')),
+        ('encoder', OneHotEncoder(drop='first', handle_unknown='ignore', sparse_output=False))
     ])
 
     preprocessor = ColumnTransformer([
@@ -89,6 +93,7 @@ def build_full_pipeline(
         ('emp', emp_pipe, employment_info_cols)
     ], remainder='passthrough')
 
+    # NOTE: Do NOT add a classifier here; add it in your main script
     pipeline = Pipeline([
         ('preprocessor', preprocessor)
     ])
