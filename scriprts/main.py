@@ -2,9 +2,12 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline
 from ml_pipeline import build_full_pipeline
 from sklearn.metrics import accuracy_score
+from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 import warnings
 
 # Optional: XGBoost and LightGBM
@@ -57,7 +60,7 @@ edu_order = ['< 12 Years', '12 Years', 'Some College', 'College Graduate']
 income_order = ['Below Poverty', '<= $75,000, Above Poverty', '> $75,000']
 enc_order = [age_order, edu_order, income_order]
 
-# Build preprocessing pipeline (shared)
+# Build preprocessing pipeline
 preprocessor = build_full_pipeline(
     ordinal_cols=ordinal_cols,
     binary_cols=binary_cols,
@@ -72,16 +75,16 @@ preprocessor = build_full_pipeline(
 )
 
 # Define models to try
+# weight balancing : class_weight='balanced'
 model_defs = {
-    "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
-    "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1)
+    "Logistic Regression": LogisticRegression(class_weight='balanced', max_iter=1000, random_state=42),
+    "Random Forest": RandomForestClassifier(class_weight='balanced', n_estimators=200, random_state=42, n_jobs=-1)
 }
 if XGBClassifier is not None:
-    model_defs["XGBoost"] = XGBClassifier(n_estimators=200, random_state=42, n_jobs=-1, use_label_encoder=False, eval_metric='logloss')
+    model_defs["XGBoost"] = XGBClassifier(class_weight='balanced', n_estimators=200, random_state=42, n_jobs=-1, use_label_encoder=False, eval_metric='logloss')
 if LGBMClassifier is not None:
-    model_defs["LightGBM"] = LGBMClassifier(n_estimators=200, random_state=42, n_jobs=-1)
+    model_defs["LightGBM"] = LGBMClassifier(class_weight='balanced', n_estimators=200, random_state=42, n_jobs=-1)
 
-# Store results
 results = []
 
 # For each target, train and evaluate each model with stratified split
@@ -92,10 +95,20 @@ for target in ['h1n1_vaccine', 'seasonal_vaccine']:
         stratify=train_labels[target]
     )
     for model_name, model in model_defs.items():
-        pipeline = Pipeline([
-            ('preprocessor', preprocessor),
-            ('classifier', model)
-        ])
+        # Use balancing algorithem only for the imbalanced target
+        if target == 'h1n1_vaccine':
+            pipeline = Pipeline([
+                ('preprocessor', preprocessor),
+                ('smote', SMOTE(random_state=42)),
+                # ('over', RandomOverSampler( random_state=42)),
+                # ('under', RandomUnderSampler(random_state=42)),
+                ('classifier', model)
+            ])
+        else:
+            pipeline = Pipeline([
+                ('preprocessor', preprocessor),
+                ('classifier', model)
+            ])
         pipeline.fit(X_train, y_train_target)
         y_pred = pipeline.predict(X_test)
         acc = accuracy_score(y_test_target, y_pred)

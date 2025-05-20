@@ -93,11 +93,7 @@ def build_full_pipeline(
         ('emp', emp_pipe, employment_info_cols)
     ], remainder='passthrough')
 
-    # NOTE: Do NOT add a classifier here; add it in your main script
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor)
-    ])
-    return pipeline
+    return preprocessor
 
 def save_pipeline(pipeline, path):
     joblib.dump(pipeline, path)
