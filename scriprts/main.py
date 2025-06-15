@@ -84,6 +84,7 @@ preprocessor = build_full_pipeline(
     nominal_enc_cols=nominal_enc_cols,
     enc_order=enc_order
 )
+preprocessor.fit(train_features)  # Fit on training data
 save_pipeline(preprocessor, 'ML_pipeline.pkl')
 
 # -------------------------------
