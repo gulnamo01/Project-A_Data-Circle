@@ -1,6 +1,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold, cross_val_score
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.cluster import hierarchy
+from scipy.spatial.distance import squareform
+from scipy.stats import spearmanr
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE, RandomOverSampler
@@ -30,9 +36,9 @@ warnings.filterwarnings("ignore")
 # -------------------------------
 # Load datasets
 # -------------------------------
-train_features = pd.read_csv("data/training_set_features.csv")
-train_labels = pd.read_csv("data/training_set_labels.csv")
-test_features = pd.read_csv("data/test_set_features.csv")
+train_features = pd.read_csv("../data/training_set_features.csv")
+train_labels = pd.read_csv("../data/training_set_labels.csv")
+test_features = pd.read_csv("../data/test_set_features.csv")
 
 # -------------------------------
 # Define columns
@@ -86,6 +92,45 @@ preprocessor = build_full_pipeline(
 )
 preprocessor.fit(train_features)  # Fit on training data
 save_pipeline(preprocessor, 'ML_pipeline.pkl')
+
+
+# -------------------------------
+# Multicollinearity Check with Spearman Correlation
+# -------------------------------
+preprocessor.fit(train_features)
+transformed_features = preprocessor.transform(train_features)
+feature_names = preprocessor.get_feature_names_out()
+
+X_processed = pd.DataFrame(transformed_features, columns=feature_names)
+
+
+corr = spearmanr(X_processed).correlation
+corr = (corr + corr.T) / 2
+np.fill_diagonal(corr, 1)
+
+# plt.figure(figsize=(15, 12))
+# sns.heatmap(corr, cmap='coolwarm', vmin=-1, vmax=1)
+# plt.title("Spearman Correlation Between Features")
+# plt.show()
+
+# distance_matrix = 1 - np.abs(corr)
+# dist_linkage = hierarchy.ward(squareform(distance_matrix))
+# plt.figure(figsize=(12, 8))
+# hierarchy.dendrogram(dist_linkage, labels=feature_names, leaf_rotation=90)
+# plt.title("Feature Clustering Based on Spearman Correlation")
+# plt.show()
+
+corr_df = pd.DataFrame(corr, index=feature_names, columns=feature_names)
+strong_corrs = []
+for i in range(len(corr_df.columns)):
+    for j in range(i):
+        corr_value = corr_df.iloc[i, j]
+        if abs(corr_value) >= 0.7:
+            strong_corrs.append((corr_df.columns[i], corr_df.columns[j], corr_value))
+
+print("🔍 STRONG CORRELATIONS (|Spearman| >= 0.7):")
+for pair in strong_corrs:
+    print(f"{pair[0]} ↔️ {pair[1]}: {pair[2]:.2f}")
 
 # -------------------------------
 # Define models with class_weight='balanced'

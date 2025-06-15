@@ -12,9 +12,11 @@ import joblib
 class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
     def __init__(self):
         self.encoders = {}
+        self.feature_names = []  # NEW: Track feature names
 
     def fit(self, X, y=None):
         X = pd.DataFrame(X)
+        self.feature_names = X.columns.tolist()  # NEW: Save original names
         for i, col in enumerate(X.columns):
             le = LabelEncoder()
             le.fit(X[col])
@@ -26,6 +28,9 @@ class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
         for i, col in enumerate(X.columns):
             X[col] = self.encoders[i].transform(X[col])
         return X
+
+    def get_feature_names_out(self, input_features=None):  # NEW METHOD
+        return self.feature_names
 
 def build_full_pipeline(
     ordinal_cols,
