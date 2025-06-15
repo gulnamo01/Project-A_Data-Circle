@@ -256,6 +256,66 @@ for target in ['h1n1_vaccine', 'seasonal_vaccine']:
         plt.close(fig)
         print(f"ROC curve saved to {img_name}")
 
+        # ----------- FEATURE IMPORTANCE SECTION -----------
+        # Extract and save feature importances or coefficients
+        best_estimator = grid.best_estimator_
+        feature_names = preprocessor.get_feature_names_out()
+        fi_df = None
+
+        if hasattr(best_estimator, "feature_importances_"):
+            # Handle XGBoost
+            if model_name == "XGBoost":
+                booster = best_estimator.get_booster()
+                gain_dict = booster.get_score(importance_type='gain')
+                # Map feature indices to names
+                fi_list = []
+                for i, fname in enumerate(feature_names):
+                    # XGBoost uses f0, f1, ... as keys
+                    key = f"f{i}"
+                    gain = gain_dict.get(key, 0.0)
+                    fi_list.append(gain)
+                feature_importance = np.array(fi_list)
+            # Handle LightGBM
+            elif model_name == "LightGBM":
+                feature_importance = best_estimator.booster_.feature_importance(importance_type='gain')
+            # Other tree models (e.g., RandomForest)
+            else:
+                feature_importance = best_estimator.feature_importances_
+            # Normalize to [0, 1]
+            if feature_importance.sum() > 0:
+                feature_importance = feature_importance / feature_importance.sum()
+            fi_df = pd.DataFrame({
+                "feature": feature_names,
+                "importance": feature_importance
+            }).sort_values(by="importance", ascending=False)
+
+        elif hasattr(best_estimator, "coef_"):
+            # For linear models (LogisticRegression), coef_ shape: (1, n_features)
+            feature_importance = np.abs(best_estimator.coef_.flatten())
+            # Normalize to [0, 1]
+            if feature_importance.sum() > 0:
+                feature_importance = feature_importance / feature_importance.sum()
+            fi_df = pd.DataFrame({
+                "feature": feature_names,
+                "importance": feature_importance
+            }).sort_values(by="importance", ascending=False)
+
+        if fi_df is not None:
+            print(f"\nAll features for {model_name} ({target}):")
+            print(fi_df.to_string(index=False))
+            # Save to CSV
+            fi_csv_name = f"models/FeatureImportance_{model_name.replace(' ', '')}_{target}.csv"
+            fi_df.to_csv(fi_csv_name, index=False)
+            print(f"Feature importances saved to {fi_csv_name}")
+            # Optional: plot all features
+            plt.figure(figsize=(10, 6))
+            fi_df.plot.bar(x="feature", y="importance", legend=False)
+            plt.title(f"All Feature Importances (Normalized): {model_name} ({target})")
+            plt.tight_layout()
+            plt.savefig(f"models/FeatureImportance_{model_name.replace(' ', '')}_{target}.png")
+            plt.close()
+        # ---------------------------------------------------
+
         # Cross-validation on full data with best params
         model_for_cv = model.set_params(**best_params)
         # For SMOTE, CV needs to be handled with a pipeline; here we report CV on preprocessed (not resampled) data
