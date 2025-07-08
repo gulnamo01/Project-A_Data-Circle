@@ -36,9 +36,9 @@ warnings.filterwarnings("ignore")
 # -------------------------------
 # Load datasets
 # -------------------------------
-train_features = pd.read_csv("../data/training_set_features.csv")
-train_labels = pd.read_csv("../data/training_set_labels.csv")
-test_features = pd.read_csv("../data/test_set_features.csv")
+train_features = pd.read_csv("data/training_set_features.csv")
+train_labels = pd.read_csv("data/training_set_labels.csv")
+test_features = pd.read_csv("data/test_set_features.csv")
 
 # -------------------------------
 # Define columns
@@ -136,28 +136,29 @@ for pair in strong_corrs:
 # Define models with class_weight='balanced'
 # -------------------------------
 model_defs = {
-    "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced'),
-    "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1, class_weight='balanced')
+#     "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced'),
+#     "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1, class_weight='balanced')
 }
+
 if XGBClassifier is not None:
     model_defs["XGBoost"] = XGBClassifier(n_estimators=200, random_state=42, n_jobs=-1, use_label_encoder=False, eval_metric='logloss')
-if LGBMClassifier is not None:
-    model_defs["LightGBM"] = LGBMClassifier(n_estimators=200, random_state=42, n_jobs=-1, class_weight='balanced')
+# if LGBMClassifier is not None:
+#     model_defs["LightGBM"] = LGBMClassifier(n_estimators=200, random_state=42, n_jobs=-1, class_weight='balanced')
 
 # -------------------------------
 # Define hyperparameter grids
 # -------------------------------
 param_grids = {
-    "Logistic Regression": {
-        'C': [0.01, 0.1, 1, 10],
-        'solver': ['liblinear', 'lbfgs'],
-        'penalty': ['l2']
-    },
-    "Random Forest": {
-        'n_estimators': [100, 200],
-        'max_depth': [None, 10, 20],
-        'min_samples_split': [2, 5]
-    }
+    # "Logistic Regression": {
+    #     'C': [0.01, 0.1, 1, 10],
+    #     'solver': ['liblinear', 'lbfgs'],
+    #     'penalty': ['l2']
+    # },
+    # "Random Forest": {
+    #     'n_estimators': [100, 200],
+    #     'max_depth': [None, 10, 20],
+    #     'min_samples_split': [2, 5]
+    # }
 }
 if XGBClassifier is not None:
     param_grids["XGBoost"] = {
@@ -165,12 +166,12 @@ if XGBClassifier is not None:
         'max_depth': [3, 5],
         'n_estimators': [100, 200]
     }
-if LGBMClassifier is not None:
-    param_grids["LightGBM"] = {
-        'learning_rate': [0.01, 0.1],
-        'num_leaves': [31, 63],
-        'n_estimators': [100, 200]
-    }
+# if LGBMClassifier is not None:
+#     param_grids["LightGBM"] = {
+#         'learning_rate': [0.01, 0.1],
+#         'num_leaves': [31, 63],
+#         'n_estimators': [100, 200]
+#     }
 
 def params_to_filename(params):
     if not params:
@@ -361,11 +362,10 @@ for target in ['h1n1_vaccine', 'seasonal_vaccine']:
 # -------------------------------
 results_df = pd.DataFrame(results)
 print("\n=== Summary Report ===")
-print("Metrics reported: Validation Accuracy, F1 Score, ROC AUC, Cross-Validation Means/Stds, ROC Curve Image Path\n")
+print("Metrics reported: Validation Accuracy, F1 Score, ROC AUC, Cross-Validation Means/Stds\n")
 print(results_df[[
     "Model", "Target", "Validation Accuracy", "F1 Score", "AUC",
-    "CV Accuracy Mean", "CV Accuracy Std", "CV F1 Mean", "CV F1 Std", "CV AUC Mean", "CV AUC Std",
-    "ROC Curve Image"
+    "CV Accuracy Mean", "CV Accuracy Std", "CV F1 Mean", "CV F1 Std", "CV AUC Mean", "CV AUC Std"
 ]].to_string(index=False))
 print("\nBest Parameters for each model/target:")
 print(results_df[['Model', 'Target', 'Best Params']].to_string(index=False))
